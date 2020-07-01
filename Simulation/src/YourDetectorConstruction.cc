@@ -66,10 +66,6 @@ void YourDetectorConstruction::DefineMaterials(){
   G4Element* fSi = new G4Element("Silicon", "Si", z=14., a=28.09*g/mole);
   
   //***Materials
-  // Air
-  Air = new G4Material("Air", density=1.29*mg/cm3, 2);
-  Air->AddElement(elN, 70*perCent);
-  Air->AddElement(elO, 30*perCent);
   //Liquid Xenon
   fLXe = new G4Material("LXe",z=54.,a=131.29*g/mole,density=3.020*g/cm3);
   // Xenon gas defined using NIST Manager
@@ -84,15 +80,6 @@ void YourDetectorConstruction::DefineMaterials(){
   fQuartz = new G4Material("Quartz",density, 2);
   fQuartz->AddElement(fSi, 1) ;
   fQuartz->AddElement(elO , 2) ;
-  
-  //***Material properties tables
-  // Air
-  G4double PhotonEnergy[]    = { 7.0*eV , 7.07*eV, 7.14*eV };
-  G4double RefractiveIndex[] = {1., 1.};
-  G4MaterialPropertiesTable* myMPT2 = new G4MaterialPropertiesTable();
-  myMPT2->AddProperty("RINDEX", PhotonEnergy, RefractiveIndex, 2);
-  
-  Air->SetMaterialPropertiesTable(myMPT2);
   
   // fLXe - example LXe and https://arxiv.org/pdf/1512.07501.pdf uses 1.63 for refractive index
   G4double lxe_Energy[]    = { 7.0*eV , 7.07*eV, 7.14*eV };
