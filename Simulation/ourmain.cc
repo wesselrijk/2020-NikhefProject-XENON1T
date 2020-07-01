@@ -31,11 +31,12 @@ int main(int argc, char** argv) {
   YourDetectorConstruction* detector = new YourDetectorConstruction();
   runManager->SetUserInitialization( detector );
    
-  //3. Create/obtain an Physics List and register it in the Run-Manager CHANGED
+  //3. Create/obtain an Physics List and register it in the Run-Manager
+  // This physics list is obtained from the Geant4 LXe example
   G4PhysListFactory physListFactory;
   const G4String plName = "FTFP_BERT";
   G4VModularPhysicsList* physicsList = physListFactory.GetReferencePhysList( plName );
-
+  
   physicsList->ReplacePhysics(new G4EmStandardPhysics_option1());
   G4OpticalPhysics* opticalPhysics = new G4OpticalPhysics();
   opticalPhysics->SetWLSTimeProfile("delta");
@@ -65,14 +66,9 @@ int main(int argc, char** argv) {
   
   // initialization of the run
   runManager->Initialize();
-  
-  // add verbosity
-  //G4EventManager::GetEventManager()->GetTrackingManager()->SetVerboseLevel(1);
 
   auto UImanager = G4UImanager::GetUIpointer();
-  
-  // simulate 10 events
-  //runManager->BeamOn(10);
+ 
   if (! ui) {
     // batch mode
     G4String command = "/control/execute ";
