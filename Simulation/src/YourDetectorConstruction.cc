@@ -45,43 +45,50 @@ YourDetectorConstruction::YourDetectorConstruction()
 
 YourDetectorConstruction::~YourDetectorConstruction() {}
 
+
+//---------------------------Materials--------------------------------------
+
 void YourDetectorConstruction::DefineMaterials(){
   
-  // Define wavelength limits for materials definition
-  lambda_min = 200*nm ; // 1.7 eV
-  lambda_max = 700*nm ; // 6.1 eV
-
   // Nist manager
   G4NistManager* nistManager = G4NistManager::Instance();
+
+  // Define wavelength limits for material energy definition
+  lambda_min = 200*nm ; // 1.7 eV
+  lambda_max = 700*nm ; // 6.1 eV
 
   G4double a;  // atomic mass
   G4double z;  // atomic number
   G4double density;
     
-  //***Elements
+  // Elements
   G4Element* fC = new G4Element("C", "C", z=6., a=12.01*g/mole);
   G4Element* fF = new G4Element("F", "F", z=9, a=19.00*g/mole);
   G4Element* elN = new G4Element("Nitrogen", "N", z=7 , a=14.01*g/mole);
   G4Element* elO = new G4Element("Oxygen"  , "O", z=8 , a=16.00*g/mole);
   G4Element* fSi = new G4Element("Silicon", "Si", z=14., a=28.09*g/mole);
   
-  //***Materials
-  //Liquid Xenon
+  // Build Materials
+  // Liquid Xenon
   fLXe = new G4Material("LXe",z=54.,a=131.29*g/mole,density=3.020*g/cm3);
+  
   // Xenon gas defined using NIST Manager
   fGXe = nistManager->FindOrBuildMaterial("G4_Xe");
+  
   //PTFE
   fPTFE = new G4Material("PTFE", density=2.2*g/cm3, 2);
   fPTFE->AddElement(fC, 2);
   fPTFE->AddElement(fF, 4);
+  
   // Quartz
-  //  density = 2.200*g/cm3; // fused quartz 
+  // density = 2.200*g/cm3; // fused quartz 
   density = 2.64*g/cm3;  // crystalline quartz (c.f. PDG) 
   fQuartz = new G4Material("Quartz",density, 2);
   fQuartz->AddElement(fSi, 1) ;
   fQuartz->AddElement(elO , 2) ;
   
-  // fLXe - example LXe and https://arxiv.org/pdf/1512.07501.pdf uses 1.63 for refractive index
+  // Material properties tables
+  // fLXe 
   G4double lxe_Energy[]    = { 7.0*eV , 7.07*eV, 7.14*eV };
   const G4int lxenum = sizeof(lxe_Energy)/sizeof(G4double);
 
@@ -106,8 +113,7 @@ void YourDetectorConstruction::DefineMaterials(){
   // Set the Birks Constant for the LXe scintillator
   fLXe->GetIonisation()->SetBirksConstant(0.126*mm/MeV);
 
-  //fPTFE https://engineering.case.edu/centers/sdle/sites/engineering.case.edu.centers.sdle/files/optical_properties_of_materials_for_concentrator_p.pdf
-  // and also the https://arxiv.org/pdf/1512.07501.pdf article , this gives a reflectivity of about 93% (see refractive index wiki)
+  //fPTFE Material Properties
   fPTFE_mt = new G4MaterialPropertiesTable();
   const G4int NUM = 2;
   G4double XX[NUM] = {h_Planck*c_light/lambda_max, h_Planck*c_light/lambda_min} ; 
@@ -117,10 +123,7 @@ void YourDetectorConstruction::DefineMaterials(){
   fPTFE_mt->AddProperty("REFLECTIVITY", XX, PTFE_refl, NUM);
   fPTFE->SetMaterialPropertiesTable(fPTFE_mt);
 
-  // Set the Birks Constant for the PTFE scintillator
-  fPTFE->GetIonisation()->SetBirksConstant(0.126*mm/MeV);
-
-  // fGXe properties table https://arxiv.org/pdf/1512.07501.pdf for refractive index
+  // fGXe Properties table
   fGXe_mt = new G4MaterialPropertiesTable();
 
   G4double wls_Energy2[] = {2.00*eV,2.87*eV,2.90*eV,3.47*eV};
@@ -129,9 +132,6 @@ void YourDetectorConstruction::DefineMaterials(){
   G4double rIndexGXe[]={ 1., 1., 1., 1.};
   fGXe_mt->AddProperty("RINDEX", wls_Energy2,rIndexGXe,wlsnum2);
   fGXe->SetMaterialPropertiesTable(fGXe_mt);
-
-  // Set the Birks Constant for the PTFE scintillator
-  fGXe->GetIonisation()->SetBirksConstant(0.126*mm/MeV);
 
   //------------------ Quarts Properties (probably not needed)-------------------------
 //           Photomultiplier (PMT) window       
@@ -161,7 +161,7 @@ G4VPhysicalVolume* YourDetectorConstruction::Construct() {
   G4double worldYZSize  = 500*targetYZSize;
   // compute gun-x position 
   fGunXPosition  = -0.5*(targetXSize+worldXSize);
-  // 
+  // create a material for the world
   G4double zet      = 1.0;
   G4double amass    = 1.01*CLHEP::g/CLHEP::mole;
   G4double density  = CLHEP::universe_mean_density;
@@ -175,15 +175,11 @@ G4VPhysicalVolume* YourDetectorConstruction::Construct() {
                                  0.5*worldXSize,  // box half x-size
                                  0.5*worldYZSize, // box half y-size
                                  0.5*worldYZSize  // box half z-size
-                                );   
-                                
-
-
+                                );                                
   G4LogicalVolume* worldLogical = new G4LogicalVolume( worldSolid,    // solid 
                                                        materialWorld, // material                             
                                                        "logic-World"  // name
                                                      );       
-
   G4VPhysicalVolume* worldPhysical = new G4PVPlacement( nullptr,                    // (no) rotation 
                                                         G4ThreeVector(0., 0., 0.),  // translation
                                                         worldLogical,               // logical volume
@@ -193,6 +189,8 @@ G4VPhysicalVolume* YourDetectorConstruction::Construct() {
                                                         0                           // cpy number
                                                       );
   
+  //---------------------Time Projection Chamber----------------------------
+
   // GXe cylinder
   G4Tubs* gasSolid = new G4Tubs ("solid-gas", 0, 96/2*targetXSize, 97/2*targetXSize,  0, 2*pi );
   G4LogicalVolume* gasLogical = new G4LogicalVolume(gasSolid, fGXe, "logic-gas");
@@ -209,13 +207,8 @@ G4VPhysicalVolume* YourDetectorConstruction::Construct() {
   gasLogical->SetVisAttributes(GXeVisAtt);   
 
   // LXe cylinder
-  G4Tubs* cylSolid = new G4Tubs ( "solid-cylinder", 0, 96/2*targetXSize, 91.5/2*targetXSize,  0, 2*pi );           
-                                  //12,20,30,0, 1.5*pi);
-
-
-  G4LogicalVolume* cylLogical = new G4LogicalVolume(cylSolid, 
-                                                       fLXe, 
-                                                       "logic-cylinder");                                 
+  G4Tubs* cylSolid = new G4Tubs ( "solid-cylinder", 0, 96/2*targetXSize, 91.5/2*targetXSize,  0, 2*pi );
+  G4LogicalVolume* cylLogical = new G4LogicalVolume(cylSolid, fLXe, "logic-cylinder");                                 
   G4VPhysicalVolume* cylPhysical = new G4PVPlacement(nullptr,
                                                         G4ThreeVector(0., 0., -2.75*targetXSize),
                                                         cylLogical, 
@@ -229,34 +222,13 @@ G4VPhysicalVolume* YourDetectorConstruction::Construct() {
   LXeVisAtt->SetVisibility(true);
   cylLogical->SetVisAttributes(LXeVisAtt);
   
-
   // Set optical surface properties
   G4OpticalSurface* OpLGSurface = new G4OpticalSurface("Liquid-Gas Xenon Surface");
   OpLGSurface-> SetModel(unified);
   OpLGSurface -> SetType(dielectric_dielectric);
-  OpLGSurface -> SetFinish(groundbackpainted);
+  OpLGSurface -> SetFinish(groundbackpainted);                                        
   
-  const G4int NUM = 2;
-  G4double pp[NUM] = {2.038*eV, 4.144*eV};
-  G4double specularlobe[NUM] = {0.3, 0.3};
-  G4double specularspike[NUM] = {0.2, 0.2};
-  G4double backscatter[NUM] = {0.1, 0.1};
-  G4double rindex[NUM] = {1.35, 1.40};
-  G4double reflectivity[NUM] = {0.03, 0.05};
-  G4double efficiency[NUM] = {0.8, 1.0};
-  G4MaterialPropertiesTable *SMPT = new G4MaterialPropertiesTable();
-  SMPT -> AddProperty("RINDEX", pp, rindex, NUM);
-  SMPT -> AddProperty("SPECULARLOBECONSTANT",pp,specularlobe,NUM);
-  SMPT ->AddProperty("SPECULARSPIKECONSTANT",pp,specularspike,NUM);
-  SMPT -> AddProperty("BACKSCATTERCONSTANT",pp,backscatter,NUM);
-  SMPT -> AddProperty("REFLECTIVITY",pp,reflectivity,NUM);
-  SMPT -> AddProperty("EFFICIENCY",pp,efficiency,NUM);
-  OpLGSurface -> SetMaterialPropertiesTable(SMPT);
-
-  // TODO check if you need this
-  //G4LogicalBorderSurface* LGSurface = new G4LogicalBorderSurface("Liquid-Gas Xenon Surface",cylPhysical,gasPhysical,OpLGSurface);                                          
-  
-  // PTFE cylinder, for the thickness of 3mm: https://arxiv.org/pdf/2006.05827.pdf
+  // PTFE cylinder
   G4Tubs* cylPTFE = new G4Tubs ( "PTFE-cylinder", 96/2*targetXSize, (96/2 + 0.3)*targetXSize, 97/2*targetXSize,  0, 2*pi );
   G4LogicalVolume* logicalPTFE = new G4LogicalVolume(cylPTFE, 
                                                        fPTFE, 
@@ -314,7 +286,6 @@ G4VPhysicalVolume* YourDetectorConstruction::Construct() {
   G4cout << "y[0] = " << y_pos[0] << G4endl;
 
 // Define the geometry of the PMTs ----------------------
-
 G4Tubs* pmtSolid = new G4Tubs ( "pmt-cylinder", 0, 7.62/2*targetXSize, targetXSize,  0, 2*pi );           
                                   
 
@@ -349,26 +320,24 @@ SetSensitiveDetector("logic-pmt", PMTSD);
                                                             0);
   }                                                          
 
-//	------------- Surfaces --------------
-//
-// Water Tank
-//
-  G4OpticalSurface* opWaterSurface = new G4OpticalSurface("WaterSurface");
-  opWaterSurface->SetType(dielectric_LUTDAVIS);
-  opWaterSurface->SetFinish(Rough_LUT);
-  opWaterSurface->SetModel(DAVIS);
+//	--------------------- Surfaces ----------------------
 
-  G4LogicalBorderSurface* waterSurface =
-          new G4LogicalBorderSurface("WaterSurface",
-                                 cylPhysical,gasPhysical,opWaterSurface);
+// Create optical surface between liquid xenon and gas xenon
+  G4OpticalSurface* opLXeSurface = new G4OpticalSurface("LXeSurface");
+  opLXeSurface->SetType(dielectric_LUTDAVIS);
+  opLXeSurface->SetFinish(Rough_LUT);
+  opLXeSurface->SetModel(DAVIS);
+
+  G4LogicalBorderSurface* LXeSurface =
+          new G4LogicalBorderSurface("LXeSurface",
+                                 cylPhysical,gasPhysical,opLXeSurface);
 
   G4OpticalSurface* opticalSurface = dynamic_cast <G4OpticalSurface*>
-        (waterSurface->GetSurface(cylPhysical,gasPhysical)->
+        (LXeSurface->GetSurface(cylPhysical,gasPhysical)->
                                                        GetSurfaceProperty());
   if (opticalSurface) opticalSurface->DumpInfo();
   
-  // PTFE
-  // create optical surfaces
+  // Create optical surface for the PTFE
   fPTFEOpticalSurface = new G4OpticalSurface("ReflectorOpticalSurface");
   fPTFEOpticalSurface->SetModel(unified);
   fPTFEOpticalSurface->SetType(dielectric_dielectric);

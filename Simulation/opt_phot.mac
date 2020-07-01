@@ -16,10 +16,4 @@
 # Set to accumulate trajectories up to 100 events
 /vis/scene/endOfEventAction accumulate 100
 
-# Particle and energy
-/gun/particle opticalphoton
-/gun/energy 2 eV
-/gun/position 0 0 0 m
-/gun/direction 0 0 1
-
 /run/beamOn 1

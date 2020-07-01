@@ -30,7 +30,7 @@ public:
    YourDetectorConstruction();
   ~YourDetectorConstruction();
   
-  // helper functions
+  // Helper functions
   virtual G4VPhysicalVolume* Construct();
   
   const G4Material* GetTargetMaterial() { return fTargetMaterial; }
@@ -45,8 +45,10 @@ public:
   
 private:
 
+  // Helper function
   void DefineMaterials();
   
+  // Materials
   G4Material* fTargetMaterial;  
   G4Material* Air; 
   G4Material* fLXe;
@@ -54,21 +56,25 @@ private:
   G4Material* fPTFE;
   G4Material* fQuartz;
   
+  // Material Property tables
   G4MaterialPropertiesTable* fLXe_mt;
   G4MaterialPropertiesTable* fGXe_mt;
   G4MaterialPropertiesTable* fPTFE_mt;
   G4MaterialPropertiesTable* fQuartz_mt;
   
+  // Target and gun information
   G4double    fTargetThickness;
   G4double    fGunXPosition;
 
+  // Optical surfaces
   G4OpticalSurface* fPTFEOpticalSurface;
   G4OpticalSurface* fReflectorOpticalSurface;
 
+  // WL parameters
   G4double lambda_min ;
   G4double lambda_max ;
 
-  UltraDetectorMessenger *fDetectorMessenger;
+  // Reflection type
   G4String fReflectionType;
   
 };
