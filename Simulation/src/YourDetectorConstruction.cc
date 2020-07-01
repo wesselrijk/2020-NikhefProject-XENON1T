@@ -18,7 +18,6 @@
 #include "G4LogicalBorderSurface.hh" // for making bordersurfaces
 #include "G4RunManager.hh" // for updating runmanager
 #include "G4SystemOfUnits.hh"// Adding system of units (ns, cm, MeV, etc.)
-#include "UltraDetectorMessenger.hh" // Messenger of ultra stuff
 #include "G4MTRunManager.hh"
 #include "G4GeometryManager.hh"
 #include "G4Element.hh"
@@ -39,9 +38,6 @@ YourDetectorConstruction::YourDetectorConstruction()
   fTargetThickness = 1.0*CLHEP::cm;
   // initial gun-x position 
   fGunXPosition    = -20;
-
-  // make the detector messenger
-  fDetectorMessenger = new UltraDetectorMessenger(this);  
 
   // DefineMaterials is used for liquid Xenon and PTFE materials
   DefineMaterials();
